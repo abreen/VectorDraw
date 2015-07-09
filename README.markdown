@@ -68,11 +68,10 @@ The following instance method adds a line to the image.
 If `style` is omitted, `DEFAULT_LINE_STYLE` is used. See the following
 example code and SVG output.
 
-    :::scala
     val lineExample = new VectorDraw(100, 100)
     lineExample.line(20, 20, 80, 80)
     lineExample.writeFile("examples/lineExample.svg")
 
 Here's the SVG that is created:
 
-![](http://raw.githubusercontent.com/abreen/VectorDraw/master/examples/lineExample.svg)
+![](https://raw.githubusercontent.com/abreen/VectorDraw/master/examples/lineExample.svg)
