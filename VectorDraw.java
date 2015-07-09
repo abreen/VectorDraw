@@ -16,6 +16,8 @@ public class VectorDraw {
     private static final String XMLNS = "http://www.w3.org/2000/svg";
     private static final String DEFAULT_FILE_NAME = "default.svg";
     private static final Color DEFAULT_COLOR = Color.BLACK;
+    private static final int DEFAULT_HEIGHT = 300;
+    private static final int DEFAULT_WIDTH = 300;
 
     public static class Color {
         private final int red;
@@ -49,22 +51,25 @@ public class VectorDraw {
     public static class Font {
         public static final String SANS_SERIF = "sans-serif";
         public static final String SERIF = "serif";
+        public static final String MONOSPACE = "monospace";
     }
 
-    private String fileName;
+    private int height;
+    private int width;
     private Document document;
     private Element root;
 
     public VectorDraw() {
-        this(DEFAULT_FILE_NAME);
+        this(DEFAULT_HEIGHT, DEFAULT_WIDTH);
     }
 
-    public VectorDraw(String fileName) {
-        this.fileName = fileName;
+    public VectorDraw(int height, int width) {
+        this.height = height;
+        this.width = width;
 
-        this.document = VectorDraw.createEmptyDocument();
+        this.document = createEmptyDocument();
 
-        Element root = VectorDraw.createSVGRoot(this.document);
+        Element root = createSVGRoot(this.document, height, width);
         this.root = root;
         this.document.appendChild(root);
     }
@@ -174,7 +179,7 @@ public class VectorDraw {
         el.setAttributeNode(attr);
     }
 
-    private void writeFile() {
+    public void writeFile(String fileName) {
         TransformerFactory factory = TransformerFactory.newInstance();
 
         Transformer transformer = null;
@@ -187,7 +192,7 @@ public class VectorDraw {
 
         DOMSource src = new DOMSource(this.document);
 
-        StreamResult result = new StreamResult(new File(this.fileName));
+        StreamResult result = new StreamResult(new File(fileName));
 
         try {
             transformer.transform(src, result);
@@ -197,12 +202,12 @@ public class VectorDraw {
         }
     }
 
-    private static Element createSVGRoot(Document doc) {
+    private static Element createSVGRoot(Document doc, int height, int width) {
         Element el = doc.createElement("svg");
 
-        Attr attr = doc.createAttribute("xmlns");
-        attr.setValue(XMLNS);
-        el.setAttributeNode(attr);
+        setAttribute(doc, el, "xmlns", XMLNS);
+        setAttribute(doc, el, "height", Integer.toString(height));
+        setAttribute(doc, el, "width", Integer.toString(width));
 
         return el;
     }
@@ -219,15 +224,5 @@ public class VectorDraw {
         }
 
         return builder.newDocument();
-    }
-
-    public static void main(String[] args) {
-        VectorDraw d = new VectorDraw("test.svg");
-        d.rectangle(10, 10, 60, 60, new Color(176, 196, 222));
-        d.circle(120, 40, 30);
-        d.line(200, 20, 330, 60, 2);
-        d.line(200, 60, 330, 100, 3, Color.RED);
-        d.text(50, 100, 16, Font.SANS_SERIF, "Test!");
-        d.writeFile();
     }
 }
