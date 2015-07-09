@@ -138,11 +138,11 @@ public class VectorDraw {
         root.appendChild(el);
     }
 
-    public void line(int x1, int y1, int x2, int y2, int width) {
-        line(x1, y1, x2, y2, width, DEFAULT_LINE_STYLE);
+    public void line(int x1, int y1, int x2, int y2) {
+        line(x1, y1, x2, y2, DEFAULT_LINE_STYLE);
     }
 
-    public void line(int x1, int y1, int x2, int y2, int width, Style style) {
+    public void line(int x1, int y1, int x2, int y2, Style style) {
         Element el = document.createElement("line");
 
         setAttribute(document, el, "x1", Integer.toString(x1));
