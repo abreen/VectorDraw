@@ -14,6 +14,9 @@ import java.io.*;
 
 public class VectorDraw {
     private static final String XMLNS = "http://www.w3.org/2000/svg";
+    private static final String PUBLIC_ID = "-//W3C//DTD SVG 1.1//EN";
+    private static final String SYSTEM_ID = "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd";
+
     private static final String DEFAULT_FILE_NAME = "default.svg";
     private static final int DEFAULT_HEIGHT = 300;
     private static final int DEFAULT_WIDTH = 300;
@@ -221,6 +224,9 @@ public class VectorDraw {
             System.err.println(e);
             System.exit(1);
         }
+
+        transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, PUBLIC_ID);
+        transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, SYSTEM_ID);
 
         DOMSource src = new DOMSource(this.document);
 
