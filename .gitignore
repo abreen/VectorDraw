@@ -1,4 +1,7 @@
-test.svg
+demo.svg
+
+project/*
+target/*
 
 *.class
 
