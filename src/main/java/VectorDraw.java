@@ -15,37 +15,52 @@ import java.io.*;
 public class VectorDraw {
     private static final String XMLNS = "http://www.w3.org/2000/svg";
     private static final String DEFAULT_FILE_NAME = "default.svg";
-    private static final Color DEFAULT_COLOR = Color.BLACK;
     private static final int DEFAULT_HEIGHT = 300;
     private static final int DEFAULT_WIDTH = 300;
+
+    private static final Style DEFAULT_STYLE =
+        new Style(Color.BLACK, Color.WHITE, 0);
+    private static final Style DEFAULT_LINE_STYLE =
+        new Style(Color.WHITE, Color.BLACK, 1);
 
     public static class Color {
         private final int red;
         private final int green;
         private final int blue;
+        private final int alpha;
 
         public Color(int red, int green, int blue) {
+            this(red, green, blue, 100);
+        }
+
+        public Color(int red, int green, int blue, int alpha) {
             for (int color : Arrays.asList(red, green, blue))
                 if (color > 255 || color < 0)
                     throw new IllegalArgumentException("invalid color value");
 
+            if (alpha > 100 || alpha < 0)
+                throw new IllegalArgumentException("invalid alpha value");
+
             this.red = red;
             this.green = green;
             this.blue = blue;
+            this.alpha = alpha;
         }
 
-        public String toRGB() {
-            return "rgb(" + red + ", " + green + ", " + blue + ")";
+        public String toRGBA() {
+            return "rgba(" + red + ", " + green + ", " + blue + ", " +
+                   alpha / 100.0 + ")";
         }
 
-        public static final Color WHITE = new Color(255, 255, 255);
-        public static final Color BLACK = new Color(0, 0, 0);
-        public static final Color RED = new Color(255, 0, 0);
-        public static final Color GREEN = new Color(0, 255, 0);
-        public static final Color BLUE = new Color(0, 0, 255);
-        public static final Color YELLOW = new Color(255, 255, 0);
-        public static final Color CYAN = new Color(0, 255, 255);
-        public static final Color MAGENTA = new Color(255, 0, 255);
+        public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+        public static final Color WHITE = new Color(255, 255, 255, 100);
+        public static final Color BLACK = new Color(0, 0, 0, 100);
+        public static final Color RED = new Color(255, 0, 0, 100);
+        public static final Color GREEN = new Color(0, 255, 0, 100);
+        public static final Color BLUE = new Color(0, 0, 255, 100);
+        public static final Color YELLOW = new Color(255, 255, 0, 100);
+        public static final Color CYAN = new Color(0, 255, 255, 100);
+        public static final Color MAGENTA = new Color(255, 0, 255, 100);
     }
 
     public static class Font {
@@ -54,10 +69,22 @@ public class VectorDraw {
         public static final String MONOSPACE = "monospace";
     }
 
-    private int height;
-    private int width;
-    private Document document;
-    private Element root;
+    public static class Style {
+        public Color fillColor;
+        public Color strokeColor;
+        public int strokeWidth;
+
+        public Style(Color fill, Color stroke, int width) {
+            fillColor = fill;
+            strokeColor = stroke;
+            strokeWidth = width;
+        }
+    }
+
+    private final int height;
+    private final int width;
+    private final Document document;
+    private final Element root;
 
     public VectorDraw() {
         this(DEFAULT_HEIGHT, DEFAULT_WIDTH);
@@ -75,18 +102,18 @@ public class VectorDraw {
     }
 
     public void circle(int x, int y, int radius) {
-        ellipse(x, y, radius, radius, DEFAULT_COLOR);
+        circle(x, y, radius, DEFAULT_STYLE);
     }
 
-    public void circle(int x, int y, int radius, Color c) {
-        ellipse(x, y, radius, radius, c);
+    public void circle(int x, int y, int radius, Style style) {
+        ellipse(x, y, radius, radius, style);
     }
 
     public void ellipse(int x, int y, int radiusX, int radiusY) {
-        ellipse(x, y, radiusX, radiusY, DEFAULT_COLOR);
+        ellipse(x, y, radiusX, radiusY, DEFAULT_STYLE);
     }
 
-    public void ellipse(int x, int y, int radiusX, int radiusY, Color c) {
+    public void ellipse(int x, int y, int radiusX, int radiusY, Style style) {
         String name;
 
         if (radiusX == radiusY)
@@ -106,16 +133,16 @@ public class VectorDraw {
             setAttribute(document, el, "ry", Integer.toString(radiusY));
         }
 
-        setAttribute(document, el, "fill", c.toRGB());
+        applyStyle(document, el, style);
 
         root.appendChild(el);
     }
 
     public void line(int x1, int y1, int x2, int y2, int width) {
-        line(x1, y1, x2, y2, width, DEFAULT_COLOR);
+        line(x1, y1, x2, y2, width, DEFAULT_LINE_STYLE);
     }
 
-    public void line(int x1, int y1, int x2, int y2, int width, Color c) {
+    public void line(int x1, int y1, int x2, int y2, int width, Style style) {
         Element el = document.createElement("line");
 
         setAttribute(document, el, "x1", Integer.toString(x1));
@@ -124,18 +151,16 @@ public class VectorDraw {
         setAttribute(document, el, "x2", Integer.toString(x2));
         setAttribute(document, el, "y2", Integer.toString(y2));
 
-        setAttribute(document, el, "stroke-width", Integer.toString(width));
-
-        setAttribute(document, el, "stroke", c.toRGB());
+        applyStyle(document, el, style);
 
         root.appendChild(el);
     }
 
     public void rectangle(int x, int y, int width, int height) {
-        rectangle(x, y, width, height, DEFAULT_COLOR);
+        rectangle(x, y, width, height, DEFAULT_STYLE);
     }
 
-    public void rectangle(int x, int y, int width, int height, Color c) {
+    public void rectangle(int x, int y, int width, int height, Style style) {
         Element el = document.createElement("rect");
 
         setAttribute(document, el, "x", Integer.toString(x));
@@ -144,17 +169,17 @@ public class VectorDraw {
         setAttribute(document, el, "width", Integer.toString(width));
         setAttribute(document, el, "height", Integer.toString(height));
 
-        setAttribute(document, el, "fill", c.toRGB());
+        applyStyle(document, el, style);
 
         root.appendChild(el);
     }
 
     public void text(int x, int y, int size, String font, String content) {
-        text(x, y, size, font, content, DEFAULT_COLOR);
+        text(x, y, size, font, content, DEFAULT_STYLE);
     }
 
     public void text(int x, int y, int size, String font,
-        String content, Color c)
+        String content, Style style)
     {
         Element el = document.createElement("text");
 
@@ -164,7 +189,7 @@ public class VectorDraw {
         setAttribute(document, el, "font-family", font);
         setAttribute(document, el, "font-size", Integer.toString(size));
 
-        setAttribute(document, el, "fill", c.toRGB());
+        applyStyle(document, el, style);
 
         el.appendChild(document.createTextNode(content));
 
@@ -177,6 +202,13 @@ public class VectorDraw {
         Attr attr = doc.createAttribute(attrName);
         attr.setValue(val);
         el.setAttributeNode(attr);
+    }
+
+    private static void applyStyle(Document doc, Element el, Style style) {
+        setAttribute(doc, el, "fill", style.fillColor.toRGBA());
+        setAttribute(doc, el, "stroke", style.strokeColor.toRGBA());
+        setAttribute(doc, el, "stroke-width",
+            Integer.toString(style.strokeWidth));
     }
 
     public void writeFile(String fileName) {
